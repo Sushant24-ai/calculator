@@ -1,29 +1,30 @@
-# Node.js
-# Build a general Node.js project with npm.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
-trigger:
-- master
-
-pool:
-  vmImage: ubuntu-latest
-
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '10.x'
-  displayName: 'Install Node.js'
-
-- script: |
-    npm install
-    npm run build
-    npm test
-  displayName: 'npm install, build, and test'
-
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'sush24-webapp'
-    publishLocation: 'Container'
+parameters:
+  - name: environment
+    displayName: Which Environment to deploy?
+    type: string
+    default: 'develop'
+    values:
+    - develop
+    - preproduction
+    - production
+    
+variables:
+  - name: colour
+    ${{ if eq( parameters['environment'], 'develop') }}:
+      value: "red"
+    ${{ elseif eq( parameters['environment'], 'preproduction' ) }}:
+      value: "yellow"
+    ${{ else }}:
+      value: "purple"
+ 
+stages:
+- stage: EnvironmentToDeploy
+  jobs:
+  - job: colour
+    steps:
+      - task: Bash@3
+        displayName: EnvironmentSelected
+        inputs:
+          targetType: inline
+          script: |
+            echo "The environment selected was ${{parameters.environment}} and colour ${{variables.colour}}"
